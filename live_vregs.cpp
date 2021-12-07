@@ -1,7 +1,10 @@
 #include <algorithm>
+#include <iostream>
+#include <string>
 #include "cfg.h"
 #include "highlevel.h"
 #include "live_vregs.h"
+using namespace std;
 
 LiveVregs::LiveVregs(ControlFlowGraph *cfg)
   : m_cfg(cfg)
@@ -76,7 +79,7 @@ void LiveVregs::execute() {
       done = true;
     }
   }
-  printf("Analysis finished in %u iterations\n", num_iters);
+  //printf("Analysis finished in %u iterations\n", num_iters);
 }
 
 const LiveVregs::LiveSet &LiveVregs::get_fact_at_end_of_block(BasicBlock *bb) const {
@@ -142,19 +145,54 @@ void LiveVregs::postorder_on_rcfg(std::bitset<LiveVregs::MAX_BLOCKS> &visited, B
   m_iter_order.push_back(bb->get_id());
 }
 
+string intToHighType(int input){
+  switch (input) {
+  case HINS_NOP:         return "nop";
+  case HINS_LOAD_ICONST: return "ldci";
+  case HINS_INT_ADD:     return "addi";
+  case HINS_INT_SUB:     return "subi";
+  case HINS_INT_MUL:     return "muli";
+  case HINS_INT_DIV:     return "divi";
+  case HINS_INT_MOD:     return "modi";
+  case HINS_INT_NEGATE:  return "negi";
+  case HINS_LOCALADDR:   return "localaddr";
+  case HINS_LOAD_INT:    return "ldi";
+  case HINS_STORE_INT:   return "sti";
+  case HINS_READ_INT:    return "readi";
+  case HINS_WRITE_INT:   return "writei";
+  case HINS_JUMP:        return "jmp";
+  case HINS_JE:          return "je";
+  case HINS_JNE:         return "jne";
+  case HINS_JLT:         return "jlt";
+  case HINS_JLTE:        return "jlte";
+  case HINS_JGT:         return "jgt";
+  case HINS_JGTE:        return "jgte";
+  case HINS_INT_COMPARE: return "cmpi";
+  case HINS_MOV:         return "mov";
+  case HINS_LEA:         return "lea";
+
+  default:
+    assert(false);
+    return "<invalid>";
+  }
+}
 void LiveVregs::model_instruction(Instruction *ins, LiveSet &fact) const {
   // Model an instruction (backwards).  If the instruction is a def,
   // it kills any vreg that was live.  Every use in the instruction
   // creates a live vreg (or keeps the vreg alive).
 
-  if (HighLevel::is_def(ins)) {
+  // if (HighLevel::is_def(ins)) {
+  //cout<<"Debug: "<< intToHighType(ins->get_opcode()) <<endl;
+
+  if (is_def(ins)) {
     Operand operand = ins->get_operand(0);
     assert(operand.has_base_reg());
     fact.reset(operand.get_base_reg());
   }
 
   for (unsigned i = 0; i < ins->get_num_operands(); i++) {
-    if (HighLevel::is_use(ins, i)) {
+    // if (HighLevel::is_use(ins, i)) {
+    if (is_use(ins, i)) {
       Operand operand = ins->get_operand(i); 
 
       assert(operand.has_base_reg());

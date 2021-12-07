@@ -19,6 +19,8 @@
 #include "codegenerator.h"
 #include "mcg.h"
 #include "optimizer.h"
+#include "highlevel.h"
+
 using namespace std;
 
 ////////////////////////////////////////////////////////////////////////
@@ -41,6 +43,7 @@ private:
   // optimizers
   ValueNumbering* valueNum;
   ConstProp* cprop;
+  Cleaner* cleaner;
 
   bool build;
   struct Node *root;
@@ -134,7 +137,20 @@ void Context::print_code()
 void Context::build_good_code()
 {
   HighLevelControlFlowGraphBuilder cfg_builder(insSet);
-  ControlFlowGraph *cfg = cfg_builder.build(); 
+  //ControlFlowGraph *cfg = cfg_builder.build(); 
+  cfg = cfg_builder.build(); 
+
+  cprop = new ConstProp(cfg);
+  cprop->optimize();
+  valueNum = new ValueNumbering(cprop->dst);
+  valueNum->optimize();
+
+  cleaner = new Cleaner(valueNum->dst);  //cleaner = new Cleaner(cprop->dst);
+  cleaner->optimize();
+
+    // cfg = cprop->dst;
+  cfg = cleaner->dst;
+  //cfg = valueNum->dst;
 
   goodCodeGen = new Mcg(myTable, cfg);
   goodCodeGen->visitCfg();
@@ -160,23 +176,27 @@ void Context::build_symtab()
 void Context::build_high_cfg()
 {
 
-  HighLevelControlFlowGraphBuilder cfg_builder(insSet);
-  cfg = cfg_builder.build();
+ // HighLevelControlFlowGraphBuilder cfg_builder(insSet);
+ //cfg = cfg_builder.build();
 
   // optimizer
-  cprop = new ConstProp(cfg);
-  cprop->optimize();
-  valueNum = new ValueNumbering(cprop->dst);
-  valueNum->optimize();
+  // cprop = new ConstProp(cfg);
+  // cprop->optimize();
+  // valueNum = new ValueNumbering(cprop->dst);
+  // valueNum->optimize();
 
 }
 
 void Context::print_high_cfg()
 {
-   // ControlFlowGraph* tmp = cprop->dst;
-    ControlFlowGraph* tmp = valueNum->dst;
-    HighLevelControlFlowGraphPrinter tmp_printer(tmp);
-    tmp_printer.print();
+  // ControlFlowGraph* tmp = cprop->dst;
+  //   ControlFlowGraph* tmp = valueNum->dst;
+  // HighLevelControlFlowGraphPrinter tmp_printer(tmp);
+  // tmp_printer.print();
+
+  InstructionSequence *result_iseq = cfg->create_instruction_sequence();
+  PrintHighLevelInstructionSequence* printer = new PrintHighLevelInstructionSequence(result_iseq);
+  printer->print();
 
 
   cout<<"////////////////////////////////////////////////////////////////////"<<endl;

@@ -496,37 +496,37 @@ void Mcg::div(Instruction *ins)
     // int rOffset = ins->get_operand(2).get_base_reg() * 8 + myTable->structSize;
     // int dOffset = ins->get_operand(0).get_base_reg() * 8 + myTable->structSize;
     int opIdx,lOffset,rOffset;
-    //Operand leftOp,rightOp;
+    Operand leftOp,rightOp;
 
-     opIdx = ins->get_operand(1).get_base_reg();
-     Operand leftOp = *(getOperand(opIdx,1));  // Operand leftOp = *(getMrUse(opIdx));
+    //  opIdx = ins->get_operand(1).get_base_reg();
+    //  Operand leftOp = *(getOperand(opIdx,1));  // Operand leftOp = *(getMrUse(opIdx));
 
-    // if (ins->get_operand(1).get_kind() == OPERAND_INT_LITERAL)
-    // {
-    //     lOffset = ins->get_operand(1).get_int_value();
-    //     leftOp = Operand(OPERAND_INT_LITERAL, lOffset);
-    // }
-    // else
-    // {
-    //     opIdx = ins->get_operand(1).get_base_reg();
-    //     leftOp = *(getOperand(opIdx,1));
+    if (ins->get_operand(1).get_kind() == OPERAND_INT_LITERAL)
+    {
+        lOffset = ins->get_operand(1).get_int_value();
+        leftOp = Operand(OPERAND_INT_LITERAL, lOffset);
+    }
+    else
+    {
+        opIdx = ins->get_operand(1).get_base_reg();
+        leftOp = *(getOperand(opIdx,1));
 
-    // }
+    }
 
-     opIdx = ins->get_operand(2).get_base_reg();
-     Operand rightOp= *(getOperand(opIdx,1));   // Operand rightOp = *(getMrUse(opIdx));
 
-    // if (ins->get_operand(2).get_kind() == OPERAND_INT_LITERAL)
-    // {
-    //     rOffset = ins->get_operand(2).get_int_value();
-    //     rightOp = Operand(OPERAND_INT_LITERAL, rOffset);
-    // }
-    // else
-    // {
-    //     opIdx = ins->get_operand(2).get_base_reg();
-    //     rightOp = *(getOperand(opIdx,1));
+    // opIdx = ins->get_operand(2).get_base_reg();
+    //Operand rightOp= *(getOperand(opIdx,1));   // Operand rightOp = *(getMrUse(opIdx));
 
-    // }
+    if (ins->get_operand(2).get_kind() == OPERAND_INT_LITERAL)
+    {
+        rOffset = ins->get_operand(2).get_int_value();
+        rightOp = Operand(OPERAND_INT_LITERAL, rOffset);
+    }
+    else
+    {
+        opIdx = ins->get_operand(2).get_base_reg();
+        rightOp = *(getOperand(opIdx,1));
+    }
 
 
     opIdx = ins->get_operand(0).get_base_reg();
@@ -551,7 +551,15 @@ void Mcg::div(Instruction *ins)
 
     // outSeq->add_instruction(new Instruction(MINS_IDIVQ, rightOp));
     // outSeq->add_instruction(new Instruction(MINS_MOVQ, rax, des));
-    curBlock->add_instruction(new Instruction(MINS_IDIVQ, rightOp));
+
+    //If the rightop is an constant, the assembly code cannot work
+    if (ins->get_operand(2).get_kind() == OPERAND_INT_LITERAL){
+        curBlock->add_instruction(new Instruction(MINS_MOVQ, rightOp,rdi));
+        curBlock->add_instruction(new Instruction(MINS_IDIVQ, rdi));
+    }else{
+        curBlock->add_instruction(new Instruction(MINS_IDIVQ, rightOp));
+    }
+
     curBlock->add_instruction(new Instruction(MINS_MOVQ, rax, des));
 }
 void Mcg::mod(Instruction *ins)
@@ -560,14 +568,37 @@ void Mcg::mod(Instruction *ins)
     // int rOffset = ins->get_operand(2).get_base_reg() * 8 + myTable->structSize;
     // int dOffset = ins->get_operand(0).get_base_reg() * 8 + myTable->structSize;
     int opIdx;
+    Operand leftOp, rightOp;
 
-    opIdx = ins->get_operand(1).get_base_reg();
-    // Operand leftOp = *(getMrUse(opIdx));
-    Operand leftOp = *(getOperand(opIdx,1));
+    // opIdx = ins->get_operand(1).get_base_reg();
+    // Operand leftOp = *(getOperand(opIdx,1));  // Operand leftOp = *(getMrUse(opIdx));
 
-    opIdx = ins->get_operand(2).get_base_reg();
-    // Operand rightOp = *(getMrUse(opIdx));
-    Operand rightOp= *(getOperand(opIdx,1));
+    if (ins->get_operand(1).get_kind() == OPERAND_INT_LITERAL)
+    {
+        opIdx= ins->get_operand(1).get_int_value();
+        leftOp = Operand(OPERAND_INT_LITERAL, opIdx);
+    }
+    else
+    {
+        opIdx = ins->get_operand(1).get_base_reg();
+        leftOp = *(getOperand(opIdx,1));
+
+    }
+
+    // opIdx = ins->get_operand(2).get_base_reg();
+    // Operand rightOp= *(getOperand(opIdx,1)); // Operand rightOp = *(getMrUse(opIdx));
+
+    if (ins->get_operand(2).get_kind() == OPERAND_INT_LITERAL)
+    {
+        opIdx = ins->get_operand(2).get_int_value();
+        rightOp = Operand(OPERAND_INT_LITERAL, opIdx);
+    }
+    else
+    {
+        opIdx = ins->get_operand(2).get_base_reg();
+        rightOp = *(getOperand(opIdx,1));
+    }
+
 
     opIdx = ins->get_operand(0).get_base_reg();
     // Operand des = *(getMrStore(opIdx));
@@ -591,8 +622,12 @@ void Mcg::mod(Instruction *ins)
 
     // outSeq->add_instruction(new Instruction(MINS_IDIVQ, rightOp));
     // outSeq->add_instruction(new Instruction(MINS_MOVQ, rdx, des));
-
-    curBlock->add_instruction(new Instruction(MINS_IDIVQ, rightOp));
+    if (ins->get_operand(2).get_kind() == OPERAND_INT_LITERAL){
+        curBlock->add_instruction(new Instruction(MINS_MOVQ, rightOp,rdi));
+        curBlock->add_instruction(new Instruction(MINS_IDIVQ, rdi));
+    }else{
+        curBlock->add_instruction(new Instruction(MINS_IDIVQ, rightOp));
+    }
     curBlock->add_instruction(new Instruction(MINS_MOVQ, rdx, des));
 }
 void Mcg::negate(Instruction *ins)
@@ -658,7 +693,8 @@ void Mcg::storeInt(Instruction *ins)
     if (ins->get_operand(0).get_kind() == OPERAND_INT_LITERAL)
     {
         lOffset = ins->get_operand(0).get_int_value();
-        left = Operand (OPERAND_MREG_MEMREF_OFFSET, MREG_RSP, lOffset);
+        // left = Operand (OPERAND_MREG_MEMREF_OFFSET, MREG_RSP, lOffset);
+        left = Operand(OPERAND_INT_LITERAL, lOffset);
     }
     else
     {
@@ -671,7 +707,8 @@ void Mcg::storeInt(Instruction *ins)
     if (ins->get_operand(1).get_kind() == OPERAND_INT_LITERAL)
     {
         rOffset = ins->get_operand(1).get_int_value();
-        right= Operand (OPERAND_MREG_MEMREF_OFFSET, MREG_RSP, rOffset);
+        //right= Operand (OPERAND_MREG_MEMREF_OFFSET, MREG_RSP, rOffset);
+        right = Operand(OPERAND_INT_LITERAL, rOffset);
     }
     else
     {

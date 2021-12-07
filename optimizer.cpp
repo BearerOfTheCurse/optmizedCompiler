@@ -13,6 +13,8 @@
 #include "cfg.h"
 #include "highlevel.h"
 #include "optimizer.h"
+#include "live_vregs.h"
+#include <bitset>
 using namespace std;
 
 
@@ -133,10 +135,61 @@ void ValueNumbering::visitBlock(BasicBlock* curBlock){
         ins = curBlock->get_instruction(i);
         visitIns(ins);
     }
+    /*
+//Debug
+
+    if(curBlock->get_id() == 9){
+      unordered_map<int,int>::iterator ite; 
+      unordered_map<VNKey*,int>::iterator it = keyToVn.begin();
+      cout<<"Debug: vrToVn: "<<endl;
+
+    ite = vrToVn.begin();
+    while(ite != vrToVn.end()){
+      cout<<ite->first<<" : "<<ite->second<<endl;
+      ite++;
+    }
+
+    cout<<"Debug: vnToVr: "<<endl;
+    ite = vnToVr.begin();
+    while(ite != vnToVr.end()){
+      cout<<ite->first<<" : "<<ite->second<<endl;
+      ite++;
+    }
+
+    cout<<"Debug: record: "<<endl;
+    it = keyToVn.begin();
+
+    while(it != keyToVn.end()){
+      cout<<"{"<<it->first->vn1 <<"," << it->first->vn2 <<"}: "<<it->second<<endl;
+      it++;
+    }
+
+    }
+//Debug end
+*/
 }
 
+void ValueNumbering::handleRead(Instruction* curIns){    
+  int curVr = curIns->get_operand(0).get_base_reg();
+  int oldVn = -1;
+  if(vrToVn.count(curVr)){
+    oldVn = vrToVn[curVr];
+    vrToVn.erase(curVr);
+    if(vnToVr[oldVn] == curVr) vnToVr.erase(oldVn);
+  }
+  vrToVn[curVr] = nextVN;
+  vnToVr[nextVN] = curVr;
+  nextVN++;
 
-void ValueNumbering::handleMov(Instruction* curIns){
+  curBlock->add_instruction(curIns);
+}
+
+void ValueNumbering::handleMemory(Instruction* curIns){    
+  // HINS_LOCALADDR, HINS_LOAD_INT, HINS_LEA        
+
+}
+
+void ValueNumbering::handleMov(Instruction* curIns){    
   /*
     cout<<"Debug:  handleMov"<<endl;
     unordered_map<int,int>::iterator ite; 
@@ -174,17 +227,17 @@ void ValueNumbering::handleMov(Instruction* curIns){
 
     if(tmp.get_kind() == OPERAND_INT_LITERAL){
       // if the case is vr1 = 3; remove the original record of vr1 and assign new vn for vr1;
-         curVn = nextVN;
-         nextVN++;
+        //  curVn = nextVN;
+        //  nextVN++;
 
-      // if(constToVn.count(srcVr)){
-      //   curVn = vrToVn[srcVr];
-      // }else{
-      //   curVn = nextVN;
-      //   constToVn[srcVr] = curVn;
-      //   vnToConst[curVn] = srcVr;
-      //   nextVN++;
-      // }
+      if(constToVn.count(srcVr)){
+         curVn = constToVn[srcVr];
+       }else{
+        curVn = nextVN;
+        constToVn[srcVr] = curVn;
+        vnToConst[curVn] = srcVr;
+        nextVN++;
+      }
     }else if(tmp.get_kind() == OPERAND_VREG){
       if(vrToVn.count(srcVr)){
         curVn = vrToVn[srcVr];
@@ -256,7 +309,14 @@ void ValueNumbering::handleExp(Instruction* curIns){
 
   if(curIns->get_operand(1).get_kind() == OPERAND_VREG){
     operandVr1 = curIns->get_operand(1).get_base_reg();
-    operandVn1 = vrToVn[operandVr1];
+    if(vrToVn.count(operandVr1)){
+      operandVn1 = vrToVn[operandVr1];
+    }else{
+      operandVn1 = nextVN;
+      vrToVn[operandVr1] = nextVN;
+      vnToVr[nextVN] = operandVn1;
+      nextVN++;
+    }
   }else if(curIns->get_operand(1).get_kind() == OPERAND_INT_LITERAL){
     operandVr1 = curIns->get_operand(1).get_int_value();
     if(constToVn.count(operandVr1)){
@@ -271,7 +331,15 @@ void ValueNumbering::handleExp(Instruction* curIns){
 
   if(curIns->get_operand(2).get_kind() == OPERAND_VREG){
     operandVr2 = curIns->get_operand(2).get_base_reg();
-    operandVn2 = vrToVn[operandVr2];
+    // operandVn2 = vrToVn[operandVr2];
+    if(vrToVn.count(operandVr2)){
+      operandVn2 = vrToVn[operandVr2];
+    }else{
+      operandVn2 = nextVN;
+      vrToVn[operandVr2] = nextVN;
+      vnToVr[nextVN] = operandVn2;
+      nextVN++;
+    }
   }else if(curIns->get_operand(2).get_kind() == OPERAND_INT_LITERAL){
     operandVr2 = curIns->get_operand(2).get_int_value();
     if(constToVn.count(operandVr2)){
@@ -298,7 +366,10 @@ void ValueNumbering::handleExp(Instruction* curIns){
     it++;
   }
 /*
-  if(operandVr1 == 1 && operandVr2 == 2){
+//Debug
+  if(resVr == 16){
+    cout<<"Debug: OperandVr1: "<<operandVr1<<" OperandVr2:"<<operandVr2<<endl;
+    cout<<"Debug: OperandVn1: "<<operandVn1<<" OperandVn2:"<<operandVn2<<endl;
     cout<<"Debug: resVn: "<<resVn<<endl;
     unordered_map<int,int>::iterator ite; 
     cout<<"Debug: vrToVn: "<<endl;
@@ -325,7 +396,8 @@ void ValueNumbering::handleExp(Instruction* curIns){
   }
 
   }
-  */
+//Debug End
+*/
 
   // if the calculation is not existed
   if(resVn == -1){
@@ -340,6 +412,9 @@ void ValueNumbering::handleExp(Instruction* curIns){
     curBlock->add_instruction(curIns);
     return;
   }
+
+  //add dst into vrToVn 
+  vrToVn[resVr] = resVn;
 
   int sourceVr;
   if(vnToVr.count(resVn)){
@@ -358,22 +433,68 @@ void ValueNumbering::handleExp(Instruction* curIns){
 }
 
 void ValueNumbering::visitIns(Instruction* curIns){
-  if(curIns->get_opcode() == HINS_MOV ||
-    curIns->get_opcode() == HINS_LOAD_ICONST){
-    handleMov(curIns);
-
-  }else if (curIns->get_opcode() == HINS_INT_ADD ||
-            curIns->get_opcode() == HINS_INT_SUB ||
-            curIns->get_opcode() == HINS_INT_MUL ||
-            curIns->get_opcode() == HINS_INT_DIV ||
-            curIns->get_opcode() == HINS_INT_MOD 
-            ){
-
+  int opcode = curIns->get_opcode();
+  switch (opcode) {
+    //expression
+  case HINS_INT_ADD:     
+  case HINS_INT_SUB:     
+  case HINS_INT_MUL:    
+  case HINS_INT_DIV:    
+  case HINS_INT_MOD:    
+  case HINS_INT_NEGATE: 
       handleExp(curIns);
+      break;
+  //do nothing
+  case HINS_NOP:         
+  case HINS_JUMP:        
+  case HINS_JE:         
+  case HINS_JNE:       
+  case HINS_JLT:      
+  case HINS_JLTE:        
+  case HINS_JGT:        
+  case HINS_JGTE:       
+  case HINS_INT_COMPARE:
+  case HINS_WRITE_INT:  
+  case HINS_STORE_INT:  
+      curBlock->add_instruction(curIns);
+      break;
+  //mov
+  case HINS_LOAD_ICONST: 
+  case HINS_MOV:         
+      handleMov(curIns);
+      break;
+  //memory 
+  case HINS_LOCALADDR: 
+  case HINS_LOAD_INT:  
+  case HINS_LEA:        
+      handleRead(curIns);
+      //handleMemory(curIns);
+      break;
+  //read
+  case HINS_READ_INT:    
+      handleRead(curIns);
+      break;
 
-  }else{
-    curBlock->add_instruction(curIns);
+  default:
+    assert(false);
   }
+  // if(curIns->get_opcode() == HINS_MOV ||
+  //   curIns->get_opcode() == HINS_LOAD_ICONST){
+  //   handleMov(curIns);
+
+  // }else if (curIns->get_opcode() == HINS_INT_ADD ||
+  //           curIns->get_opcode() == HINS_INT_SUB ||
+  //           curIns->get_opcode() == HINS_INT_MUL ||
+  //           curIns->get_opcode() == HINS_INT_DIV ||
+  //           curIns->get_opcode() == HINS_INT_MOD ||
+  //           curIns->get_opcode() == HINS_INT_NEGATE
+  //           ){
+
+  //     handleExp(curIns);
+
+  // }else{
+  //   curBlock->add_instruction(curIns);
+  // }
 
 }
 
@@ -401,6 +522,7 @@ void ConstProp::visitBlock(BasicBlock* curBlock){
 }
 
 void ConstProp::visitIns(Instruction* curIns){
+
   if(curIns->get_opcode() == HINS_LOAD_ICONST){
     int num = curIns->get_operand(1).get_int_value();
     int vrIdx = curIns->get_operand(0).get_base_reg();
@@ -434,3 +556,42 @@ void ConstProp::visitIns(Instruction* curIns){
     curBlock->add_instruction(curIns);
   }
 }
+
+////////////////////////////////////////////////////////////////////////
+// Cleaner Implementation
+////////////////////////////////////////////////////////////////////////
+Cleaner::Cleaner(ControlFlowGraph* input){
+    src = input;
+    dst = new ControlFlowGraph();
+    curBlock = nullptr;
+    analyzer = new LiveVregs(input);
+    analyzer->execute();
+}
+void Cleaner::visitBlock(BasicBlock* inputBlock){
+    // begin going through
+    int sz = inputBlock->get_length();
+    Instruction *ins;
+    bitset<256> liveVr;
+    //bool canDelete = 0;
+
+    for (int i = 0; i < sz; i++)
+    {
+
+        ins = inputBlock->get_instruction(i);
+        liveVr = analyzer->get_fact_after_instruction(inputBlock,ins);
+        if(is_def(ins)){
+          int vr = ins->get_operand(0).get_base_reg();
+          if(liveVr.test(vr)){
+            curBlock->add_instruction(ins);
+          }
+
+        }else{
+            curBlock->add_instruction(ins);
+        }
+    }
+}
+void Cleaner::visitIns(Instruction* curIns){
+
+}
+
+

@@ -1,5 +1,11 @@
  need to do:
 
+  memory access in LVN
+  LVN not significant improve (maybe no exchange?)
+  how many loops for optimize
+  
+
+
  READ n;
   IF n < 18 THEN
     WRITE 0;

@@ -14,6 +14,7 @@
 #include "symtab.h"
 #include "cfg.h"
 #include "highlevel.h"
+#include "live_vregs.h"
 
 class Optimizer{
 
@@ -42,6 +43,10 @@ struct VNKey {
 };
 
 class ValueNumbering :public Optimizer{
+    // order
+    // memory
+    // peehole
+
     private:
     unordered_map<int,int> constToVn ;
     unordered_map<int,int> vnToConst ;
@@ -58,6 +63,8 @@ class ValueNumbering :public Optimizer{
 
     void handleMov(Instruction* curIns);
     void handleExp(Instruction* curIns);
+    void handleMemory(Instruction* curIns);
+    void handleRead(Instruction* curIns);
 
     //BasicBlock* findBlock(ControlFlowGraph* cfg,unsigned int bbIdx);
 
@@ -79,6 +86,18 @@ class ConstProp :public Optimizer{
 
     public:
     ConstProp(ControlFlowGraph* input);
+
+}; 
+
+class Cleaner:public Optimizer{
+    private:
+    LiveVregs* analyzer;
+
+    void visitBlock(BasicBlock* curBlock);
+    void visitIns(Instruction* curIns);
+
+    public:
+    Cleaner(ControlFlowGraph* input);
 
 }; 
 

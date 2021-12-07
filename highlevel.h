@@ -3,6 +3,10 @@
 
 #include "cfg.h"
 
+//live variable analylsis
+bool is_def(Instruction* ins);
+bool is_use(Instruction* ins, int opIdx);
+
 // "High-level" opcodes
 enum HighLevelOpcode {
   HINS_NOP,

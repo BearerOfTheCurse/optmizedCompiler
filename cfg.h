@@ -181,7 +181,16 @@ private:
   // this will be set of the next instruction should be labeled
   std::string m_next_label;
 
+
+
 public:
+
+  //Live variable analysis
+  typedef std::vector<Instruction *>::const_reverse_iterator const_reverse_iterator;
+  const_reverse_iterator crbegin() const { return m_instr_seq.crbegin(); }
+  const_reverse_iterator crend() const { return m_instr_seq.crend(); }
+
+
   typedef std::vector<Instruction *>::iterator iterator;
   typedef std::vector<Instruction *>::const_iterator const_iterator;
 
@@ -406,6 +415,10 @@ public:
   // Return a "flat" InstructionSequence created from this ControlFlowGraph;
   // this is useful for optimization passes which create a transformed ControlFlowGraph
   InstructionSequence *create_instruction_sequence() const;
+
+  //Get basic block according to block id
+  BasicBlock *get_block(int blockId);
+
 
 private:
   void append_basic_block(InstructionSequence *iseq, const BasicBlock *bb, std::vector<bool> &finished_blocks) const;

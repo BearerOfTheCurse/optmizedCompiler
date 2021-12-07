@@ -1,8 +1,11 @@
 #include <cassert>
 #include <cstdio>
 #include <algorithm>
+#include <iostream>
+#include <vector>
 #include "cpputil.h"
 #include "cfg.h"
+using namespace std;
 
 ////////////////////////////////////////////////////////////////////////
 // Operand implementation
@@ -594,6 +597,17 @@ void ControlFlowGraph::visit_successors(BasicBlock *bb, std::deque<BasicBlock *>
     Edge *e = *k;
     work_list.push_back(e->get_target());
   }
+}
+
+BasicBlock *ControlFlowGraph::get_block(int blockId){
+  for(int i=0;i<m_basic_blocks.size();i++){
+    if(m_basic_blocks[i]->get_id() == blockId){
+      return m_basic_blocks[i];
+    }
+  }
+  cerr<<"The block "<<blockId<<" does not exist in this cfg" <<endl;
+  exit(-1);
+  
 }
 
 ////////////////////////////////////////////////////////////////////////
