@@ -55,6 +55,7 @@ class ValueNumbering :public Optimizer{
     unordered_map<VNKey*,int> keyToVn;
 
     int nextVN;
+    int memOffset;
 
     //ControlFlowGraph* src;
     //visitCfg(ControlFlowGraph* src);
@@ -86,6 +87,18 @@ class ConstProp :public Optimizer{
 
     public:
     ConstProp(ControlFlowGraph* input);
+
+}; 
+
+class VRProp :public Optimizer{
+    private:
+    unordered_map<int,int> vrToVr;
+
+    void visitBlock(BasicBlock* curBlock);
+    void visitIns(Instruction* curIns);
+
+    public:
+    VRProp(ControlFlowGraph* input);
 
 }; 
 

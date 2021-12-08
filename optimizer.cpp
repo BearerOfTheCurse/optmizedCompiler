@@ -115,6 +115,7 @@ ValueNumbering::ValueNumbering(ControlFlowGraph* input){
     dst = new ControlFlowGraph();
     curBlock = nullptr;
     nextVN = 0;
+    memOffset = 10000;
 }
 
 void ValueNumbering::visitBlock(BasicBlock* curBlock){
@@ -185,7 +186,31 @@ void ValueNumbering::handleRead(Instruction* curIns){
 }
 
 void ValueNumbering::handleMemory(Instruction* curIns){    
-  // HINS_LOCALADDR, HINS_LOAD_INT, HINS_LEA        
+  // HINS_LOCALADDR        
+  int curVr = curIns->get_operand(0).get_base_reg();
+  int oldVn = -1;
+  if(vrToVn.count(curVr)){
+    oldVn = vrToVn[curVr];
+    vrToVn.erase(curVr);
+    if(vnToVr[oldVn] == curVr) vnToVr.erase(oldVn);
+  }
+  int newVn;
+  int memAdd = curIns->get_operand(1).get_int_value() + memOffset;
+
+  if(constToVn.count(memAdd)){
+    newVn = constToVn[memAdd];
+    vrToVn[curVr] = newVn;
+    vnToVr[newVn] = curVr;
+  }else{
+    constToVn[memAdd] = nextVN;
+    vnToConst[nextVN] = memAdd;
+
+    vrToVn[curVr] = nextVN;
+    vnToVr[nextVN] = curVr;
+    nextVN++;
+  }
+
+  curBlock->add_instruction(curIns);
 
 }
 
@@ -465,12 +490,12 @@ void ValueNumbering::visitIns(Instruction* curIns){
       break;
   //memory 
   case HINS_LOCALADDR: 
-  case HINS_LOAD_INT:  
-  case HINS_LEA:        
-      handleRead(curIns);
-      //handleMemory(curIns);
+      //handleRead(curIns);
+      handleMemory(curIns);
       break;
   //read
+  case HINS_LOAD_INT:  
+  case HINS_LEA:        
   case HINS_READ_INT:    
       handleRead(curIns);
       break;
@@ -546,6 +571,71 @@ void ConstProp::visitIns(Instruction* curIns){
     Instruction* ins;
     if(curIns->get_num_operands() == 2){
      ins = new Instruction(curIns->get_opcode(),newOperand[0],newOperand[1]);
+    }else{
+     ins = new Instruction(curIns->get_opcode(),newOperand[0],newOperand[1],newOperand[2]);
+    }
+
+    curBlock->add_instruction(ins);
+
+  }else{
+    curBlock->add_instruction(curIns);
+  }
+}
+
+////////////////////////////////////////////////////////////////////////
+// VRProp Implementation
+////////////////////////////////////////////////////////////////////////
+ VRProp::VRProp(ControlFlowGraph* input){
+    src = input;
+    dst = new ControlFlowGraph();
+    curBlock = nullptr;
+}
+
+void VRProp::visitBlock(BasicBlock* curBlock){
+    vrToVr.clear();
+
+    // begin going through
+    int sz = curBlock->get_length();
+    Instruction *ins;
+
+    for (int i = 0; i < sz; i++)
+    {
+        ins = curBlock->get_instruction(i);
+        visitIns(ins);
+    }
+}
+
+void VRProp::visitIns(Instruction* curIns){
+
+  if(curIns->get_opcode() == HINS_MOV && curIns->get_operand(1).get_kind() == OPERAND_VREG){
+    int vr0 = curIns->get_operand(0).get_base_reg();
+    int vr1 = curIns->get_operand(1).get_base_reg();
+
+    if(vrToVr.count(vr1)){
+      vrToVr[vr0] = vrToVr[vr1];
+    }else{
+      vrToVr[vr0] = vr1;
+    }
+  }
+  
+  if(curIns->get_num_operands() == 2 || curIns->get_num_operands() == 3 ){
+
+    vector<Operand> newOperand;
+    Operand curOp;
+
+    for(int i=0;i<curIns->get_num_operands();i++){
+      curOp = curIns->get_operand(i);
+      if(is_use(curIns,i) && vrToVr.count(curOp.get_base_reg())){
+           Operand tmp(OPERAND_VREG, vrToVr[curOp.get_base_reg()]);
+           newOperand.push_back(tmp);
+      }else{
+          newOperand.push_back(curOp);
+      }
+    }
+    Instruction* ins;
+    if(curIns->get_num_operands() == 2){
+     ins = new Instruction(curIns->get_opcode(),newOperand[0],newOperand[1]);
+
     }else{
      ins = new Instruction(curIns->get_opcode(),newOperand[0],newOperand[1],newOperand[2]);
     }

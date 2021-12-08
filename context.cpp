@@ -43,6 +43,7 @@ private:
   // optimizers
   ValueNumbering* valueNum;
   ConstProp* cprop;
+  VRProp* vprop; 
   Cleaner* cleaner;
 
   bool build;
@@ -144,13 +145,17 @@ void Context::build_good_code()
   cprop->optimize();
   valueNum = new ValueNumbering(cprop->dst);
   valueNum->optimize();
+  //vprop = new VRProp(valueNum->dst);
+  // vprop->optimize();
 
+  //cleaner = new Cleaner(vprop->dst); 
   cleaner = new Cleaner(valueNum->dst);  //cleaner = new Cleaner(cprop->dst);
   cleaner->optimize();
 
-    // cfg = cprop->dst;
+  //  cfg = cprop->dst;
   cfg = cleaner->dst;
-  //cfg = valueNum->dst;
+  // cfg = vprop->dst;
+  // cfg = valueNum->dst;
 
   goodCodeGen = new Mcg(myTable, cfg);
   goodCodeGen->visitCfg();

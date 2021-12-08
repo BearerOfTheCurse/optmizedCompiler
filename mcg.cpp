@@ -42,7 +42,8 @@ Mcg::Mcg(SymbolTable *table, ControlFlowGraph *inGraph) : myTable(table), highCf
     scanf_label = Operand("scanf");
 
     //building mr(the mapping)
-    //callee
+
+//callee
     Operand* op;                           //new Operand();  *op =  rdx;  mr[0] = op;
     op = new Operand();  *op =  r8;  mr[0] = op;
     op = new Operand();  *op =  r9;  mr[1] = op;
@@ -54,6 +55,20 @@ Mcg::Mcg(SymbolTable *table, ControlFlowGraph *inGraph) : myTable(table), highCf
     op = new Operand();  *op =  r13;  mr[6] = op;
     op = new Operand();  *op =  r14;  mr[7] = op;
     op = new Operand();  *op =  r15;  mr[8] = op;
+/*
+//caller 
+    Operand* op;
+    op = new Operand();  *op =  rbx; mr[0] = op;
+    op = new Operand();  *op =  r12;  mr[1] = op;
+    op = new Operand();  *op =  r13;  mr[2] = op;
+    op = new Operand();  *op =  r14;  mr[3] = op;
+    op = new Operand();  *op =  r15;  mr[4] = op;
+//callee
+    op = new Operand();  *op =  r8;  mr[5] = op;
+    op = new Operand();  *op =  r9;  mr[6] = op;
+    op = new Operand();  *op =  r10;  mr[7] = op;
+    op = new Operand();  *op =  r11;  mr[8] = op;
+    */
 
     for(int i=0;i<maxMr;i++){
         mrToVr[i] = -1;
@@ -1205,7 +1220,8 @@ Operand* Mcg::getMrStore(int vrIdx){   //return a mr that can be used to store;
 void Mcg::storeCallerMr(){   // store all the caller saved mr to memory
     int vrIdx,dOffset;
     Operand src;
-    for(int i=0;i<5;i++){
+     for(int i=0;i<5;i++){
+    // for(int i=5;i<9;i++){
         if(mrToVr[i] != -1){
             vrIdx = mrToVr[i];
             src = *(mr[i]);      //value of vr to spill
@@ -1225,7 +1241,8 @@ void Mcg::storeCallerMr(){   // store all the caller saved mr to memory
 void Mcg::loadCallerMr(){   // load all the caller saved mr to memory
     int vrIdx,dOffset;
     Operand src;
-    for(int i=0;i<5;i++){
+     for(int i=0;i<5;i++){
+    // for(int i=5;i<9;i++){
         if(mrToVr[i] != -1){
             vrIdx = mrToVr[i];
             src = *(mr[i]);      //value of vr to spill
