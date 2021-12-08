@@ -44,6 +44,7 @@ private:
   ValueNumbering* valueNum;
   ConstProp* cprop;
   VRProp* vprop; 
+  Peephole* hole;
   Cleaner* cleaner;
 
   bool build;
@@ -141,6 +142,30 @@ void Context::build_good_code()
   //ControlFlowGraph *cfg = cfg_builder.build(); 
   cfg = cfg_builder.build(); 
 
+  //optimize
+  cprop = new ConstProp(cfg);
+  valueNum = new ValueNumbering(cfg);
+  vprop = new VRProp(cfg);
+  cleaner = new Cleaner(cfg); 
+
+  for(int i=0;i<2;i++){
+    cprop->resetCfg(cfg);
+    cprop->optimize();
+    cfg = cprop->dst;
+
+   valueNum->resetCfg(cfg);
+   valueNum->optimize();
+    cfg = valueNum->dst;
+
+   vprop->resetCfg(cfg);
+   vprop->optimize();
+    cfg = vprop->dst;
+
+   cleaner->resetCfg(cfg);
+   cleaner->optimize();
+    cfg = cleaner->dst;
+  }
+/*
   cprop = new ConstProp(cfg);
   cprop->optimize();
   valueNum = new ValueNumbering(cprop->dst);
@@ -148,14 +173,20 @@ void Context::build_good_code()
   vprop = new VRProp(valueNum->dst);
   vprop->optimize();
 
-  cleaner = new Cleaner(vprop->dst); 
-  // cleaner = new Cleaner(valueNum->dst);  //cleaner = new Cleaner(cprop->dst);
-  cleaner->optimize();
+  //hole = new Peephole(vprop->dst);
+  //hole->optimize();
 
-  //  cfg = cprop->dst;
+  cleaner = new Cleaner(vprop->dst); 
+  cleaner->optimize();
+  //cleaner = new Cleaner(hole->dst); 
+  // cleaner = new Cleaner(valueNum->dst);  //cleaner = new Cleaner(cprop->dst);
+
    cfg = cleaner->dst;
-  // cfg = vprop->dst;
+  //  cfg = cprop->dst;
+   //cfg = hole->dst;
+  //  cfg = vprop->dst;
   // cfg = valueNum->dst;
+  */
 
   goodCodeGen = new Mcg(myTable, cfg);
   goodCodeGen->visitCfg();

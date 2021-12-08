@@ -54,6 +54,12 @@ void Optimizer::optimize(){
     visitCfg(src,dst);
 }
 
+void Optimizer::resetCfg(ControlFlowGraph* input){
+  src = input;
+  dst = new ControlFlowGraph();
+  curBlock = nullptr;
+}
+
 void Optimizer::visitCfg(ControlFlowGraph* input,ControlFlowGraph* output){
 
   vector<Edge*> myEdgeList;
@@ -645,6 +651,95 @@ void VRProp::visitIns(Instruction* curIns){
   }else{
     curBlock->add_instruction(curIns);
   }
+}
+
+////////////////////////////////////////////////////////////////////////
+// Peephole Implementation
+////////////////////////////////////////////////////////////////////////
+Peephole::Peephole(ControlFlowGraph* input){
+    src = input;
+    dst = new ControlFlowGraph();
+    curBlock = nullptr;
+}
+void Peephole::replace(Instruction* ins){
+    bool shouldReplace = 0;
+    if(vrToVr.size()){
+      vector<Operand> operands;
+      for(int i=0;i<ins->get_num_operands();i++){
+        if(ins->get_operand(i).has_base_reg() && vrToVr.count(ins->get_operand(i).get_base_reg())){
+          Operand newOperand(OPERAND_VREG,vrToVr[ins->get_operand(i).get_base_reg()]);
+          operands.push_back(newOperand);
+          shouldReplace = 1; 
+
+        }else{
+          operands.push_back(ins->get_operand(i));
+        }
+      }
+    
+    Instruction* newIns;
+    if(shouldReplace){
+      if(ins->get_num_operands() == 2){
+        newIns = new Instruction(ins->get_opcode(),operands[0],operands[1]);
+      }else if (ins->get_num_operands() == 3){
+        newIns = new Instruction(ins->get_opcode(),operands[0],operands[1],operands[2]);
+      }else{
+        cerr<<"Error: The Peephole replace cannot handle this case"<<endl;
+        exit(-1);
+      }
+      curBlock->add_instruction(newIns);
+
+    }else{
+      curBlock->add_instruction(ins);
+    }
+  }else{
+      curBlock->add_instruction(ins);
+  }
+}
+bool Peephole::ldiMovRule(BasicBlock* inputBlock, int i){
+    Instruction *ins0 = inputBlock->get_instruction(i);
+    if(i+1 <inputBlock->get_length()){
+      Instruction *ins1 = inputBlock->get_instruction(i+1);
+      if(ins0->get_opcode() == HINS_LOAD_INT 
+        && ins1->get_opcode() == HINS_MOV
+        && ins0->get_operand(0).has_base_reg() 
+        && ins1->get_operand(1).has_base_reg() 
+        && ins0->get_operand(0).get_base_reg() == ins1->get_operand(1).get_base_reg()){
+          // cout<< "Debug: ldi: "<<ins0->get_operand(0).get_base_reg()<<","<< ins0->get_operand(1).get_base_reg()<<endl;
+          // cout<< "Debug: mov: "<<ins1->get_operand(0).get_base_reg()<<","<< ins1->get_operand(1).get_base_reg()<<endl;
+          vrToVr[ins1->get_operand(1).get_base_reg()] = ins1->get_operand(0).get_base_reg();
+
+          Instruction* ins = new Instruction(HINS_LOAD_INT, ins1->get_operand(0),ins0->get_operand(1));
+          ins->set_comment("Peephole: ldiMov");
+          curBlock->add_instruction(ins);
+          return true;
+      }
+
+    }
+
+    return false;
+
+}
+void Peephole::visitBlock(BasicBlock* inputBlock){
+    // begin going through
+    int sz = inputBlock->get_length();
+    //bool canDelete = 0;
+
+    Instruction *curIns;
+    for (int i = 0; i < sz; i++)
+    {
+        curIns = inputBlock->get_instruction(i);
+
+        if(ldiMovRule(inputBlock,i)){
+          i++;
+          continue;
+        }
+
+        replace(curIns);
+
+    }
+}
+void Peephole::visitIns(Instruction* curIns){
+
 }
 
 ////////////////////////////////////////////////////////////////////////

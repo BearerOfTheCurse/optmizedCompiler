@@ -20,9 +20,11 @@ class Optimizer{
 
     public:
     void visitCfg(ControlFlowGraph* input,ControlFlowGraph* output);
+    void resetCfg(ControlFlowGraph* input);
     virtual void visitBlock(BasicBlock* inputBlock);
     virtual void visitIns(Instruction* curIns);
     BasicBlock* findBlock(ControlFlowGraph* cfg,unsigned int bbIdx);
+
 
     BasicBlock* curBlock;
     ControlFlowGraph* src;
@@ -99,6 +101,22 @@ class VRProp :public Optimizer{
 
     public:
     VRProp(ControlFlowGraph* input);
+
+}; 
+
+class Peephole:public Optimizer{
+    private:
+
+    unordered_map<int,int> vrToVr;
+
+    void replace(Instruction* ins);
+    bool ldiMovRule(BasicBlock* inputBlock, int insIdx);  // ldi v3 (v4); mov v5 v3; => ldi v5 (v4)
+
+    void visitBlock(BasicBlock* curBlock);
+    void visitIns(Instruction* curIns);
+
+    public:
+    Peephole(ControlFlowGraph* input);
 
 }; 
 
