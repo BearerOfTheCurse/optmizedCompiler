@@ -43,6 +43,7 @@ Mcg::Mcg(SymbolTable *table, ControlFlowGraph *inGraph) : myTable(table), highCf
 
     //building mr(the mapping)
 
+/*
 //callee
     Operand* op;                           //new Operand();  *op =  rdx;  mr[0] = op;
     op = new Operand();  *op =  r8;  mr[0] = op;
@@ -55,8 +56,8 @@ Mcg::Mcg(SymbolTable *table, ControlFlowGraph *inGraph) : myTable(table), highCf
     op = new Operand();  *op =  r13;  mr[6] = op;
     op = new Operand();  *op =  r14;  mr[7] = op;
     op = new Operand();  *op =  r15;  mr[8] = op;
-/*
 //caller 
+    */
     Operand* op;
     op = new Operand();  *op =  rbx; mr[0] = op;
     op = new Operand();  *op =  r12;  mr[1] = op;
@@ -68,7 +69,6 @@ Mcg::Mcg(SymbolTable *table, ControlFlowGraph *inGraph) : myTable(table), highCf
     op = new Operand();  *op =  r9;  mr[6] = op;
     op = new Operand();  *op =  r10;  mr[7] = op;
     op = new Operand();  *op =  r11;  mr[8] = op;
-    */
 
     for(int i=0;i<maxMr;i++){
         mrToVr[i] = -1;
@@ -506,7 +506,6 @@ void Mcg::mul(Instruction *ins)
 }
 void Mcg::div(Instruction *ins)
 {
-    // cout<<"Debug: div"<<endl;
     // int lOffset = ins->get_operand(1).get_base_reg() * 8 + myTable->structSize;
     // int rOffset = ins->get_operand(2).get_base_reg() * 8 + myTable->structSize;
     // int dOffset = ins->get_operand(0).get_base_reg() * 8 + myTable->structSize;
@@ -795,9 +794,10 @@ void Mcg::readi(Instruction *ins)       // ??? do not use register to replace
     storeCallerMr();  //keep caller register's value
     //outSeq->add_instruction(new Instruction(MINS_CALL, scanf_label));
     curBlock->add_instruction(new Instruction(MINS_CALL, scanf_label));
-    loadCallerMr();
 
-   // curBlock->add_instruction(new Instruction(MINS_MOVQ, localvar, mrOperand));
+    loadCallerMr();
+    curBlock->add_instruction(new Instruction(MINS_MOVQ, localvar, mrOperand));
+
 }
 
 void Mcg::writei(Instruction *ins)
@@ -1063,8 +1063,8 @@ Operand* Mcg::getMrUse(int vrIdx){   //return a mr that contains value to use;
             cout<<it->first <<" "<<it->second<<endl;
             it++;
         }
-        */
 
+*/
     // vr already in registers
     if(vrToMr.count(vrIdx) !=0 ){
         int mrIdx = vrToMr[vrIdx];
@@ -1220,8 +1220,8 @@ Operand* Mcg::getMrStore(int vrIdx){   //return a mr that can be used to store;
 void Mcg::storeCallerMr(){   // store all the caller saved mr to memory
     int vrIdx,dOffset;
     Operand src;
-     for(int i=0;i<5;i++){
-    // for(int i=5;i<9;i++){
+     //for(int i=0;i<5;i++){
+     for(int i=5;i<9;i++){
         if(mrToVr[i] != -1){
             vrIdx = mrToVr[i];
             src = *(mr[i]);      //value of vr to spill
@@ -1241,8 +1241,8 @@ void Mcg::storeCallerMr(){   // store all the caller saved mr to memory
 void Mcg::loadCallerMr(){   // load all the caller saved mr to memory
     int vrIdx,dOffset;
     Operand src;
-     for(int i=0;i<5;i++){
-    // for(int i=5;i<9;i++){
+    //  for(int i=0;i<5;i++){
+     for(int i=5;i<9;i++){
         if(mrToVr[i] != -1){
             vrIdx = mrToVr[i];
             src = *(mr[i]);      //value of vr to spill

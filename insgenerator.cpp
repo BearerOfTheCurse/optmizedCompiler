@@ -526,6 +526,8 @@ void InsGenerator::visit_write(struct Node *ast)
 
 void InsGenerator::visit_read(struct Node *ast)
 {
+
+  //cout<<"Debug: insVRIdx: "<<insVRIdx<<endl;
   //insVRIdx = myTable->vrIdx;
 
   recur_on_children(ast);
@@ -559,6 +561,9 @@ void InsGenerator::visit_read(struct Node *ast)
 
   // deal with myTable->vrIdxMax
   myTable->vrIdxMax = max(myTable->vrIdxMax, insVRIdx);
+
+  //Edit
+  insVRIdx++;
 
   //insVRIdx = myTable->vrIdx;
 }

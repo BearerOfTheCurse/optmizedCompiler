@@ -26,7 +26,7 @@ private:
   unordered_map<int,int> spill;       //record the memory address that stores the vr value;
 
   unordered_map<int,Operand*> mr;       // give machine register an order, easy to find them
-  int maxMr = 5;
+  int maxMr = 9;
   int insIdx;
   BasicBlock* curBlock;
 

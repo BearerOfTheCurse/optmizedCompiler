@@ -145,15 +145,15 @@ void Context::build_good_code()
   cprop->optimize();
   valueNum = new ValueNumbering(cprop->dst);
   valueNum->optimize();
-  //vprop = new VRProp(valueNum->dst);
-  // vprop->optimize();
+  vprop = new VRProp(valueNum->dst);
+  vprop->optimize();
 
-  //cleaner = new Cleaner(vprop->dst); 
-  cleaner = new Cleaner(valueNum->dst);  //cleaner = new Cleaner(cprop->dst);
+  cleaner = new Cleaner(vprop->dst); 
+  // cleaner = new Cleaner(valueNum->dst);  //cleaner = new Cleaner(cprop->dst);
   cleaner->optimize();
 
   //  cfg = cprop->dst;
-  cfg = cleaner->dst;
+   cfg = cleaner->dst;
   // cfg = vprop->dst;
   // cfg = valueNum->dst;
 
