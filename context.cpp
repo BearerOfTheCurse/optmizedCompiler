@@ -139,7 +139,6 @@ void Context::print_code()
 void Context::build_good_code()
 {
   HighLevelControlFlowGraphBuilder cfg_builder(insSet);
-  //ControlFlowGraph *cfg = cfg_builder.build(); 
   cfg = cfg_builder.build(); 
 
   //optimize
@@ -167,29 +166,6 @@ void Context::build_good_code()
   cfg = cleaner->dst;
   }
 
-/*
-  cprop = new ConstProp(cfg);
-  cprop->optimize();
-  valueNum = new ValueNumbering(cprop->dst);
-  valueNum->optimize();
-  vprop = new VRProp(valueNum->dst);
-  vprop->optimize();
-
-  //hole = new Peephole(vprop->dst);
-  //hole->optimize();
-
-  cleaner = new Cleaner(vprop->dst); 
-  cleaner->optimize();
-  //cleaner = new Cleaner(hole->dst); 
-  // cleaner = new Cleaner(valueNum->dst);  //cleaner = new Cleaner(cprop->dst);
-
-   cfg = cleaner->dst;
-  //  cfg = cprop->dst;
-   //cfg = hole->dst;
-  //  cfg = vprop->dst;
-  // cfg = valueNum->dst;
-  */
-
   goodCodeGen = new Mcg(myTable, cfg);
   goodCodeGen->visitCfg();
 }
@@ -214,23 +190,10 @@ void Context::build_symtab()
 void Context::build_high_cfg()
 {
 
- // HighLevelControlFlowGraphBuilder cfg_builder(insSet);
- //cfg = cfg_builder.build();
-
-  // optimizer
-  // cprop = new ConstProp(cfg);
-  // cprop->optimize();
-  // valueNum = new ValueNumbering(cprop->dst);
-  // valueNum->optimize();
-
 }
 
 void Context::print_high_cfg()
 {
-  // ControlFlowGraph* tmp = cprop->dst;
-  //   ControlFlowGraph* tmp = valueNum->dst;
-  // HighLevelControlFlowGraphPrinter tmp_printer(tmp);
-  // tmp_printer.print();
 
   InstructionSequence *result_iseq = cfg->create_instruction_sequence();
   PrintHighLevelInstructionSequence* printer = new PrintHighLevelInstructionSequence(result_iseq);
@@ -244,8 +207,6 @@ void Context::print_high_cfg()
 
 void Context::build_x86_cfg()
 {
-  //X86_64ControlFlowGraphBuilder xcfg_builder(codeGen->outSeq);
-  //xcfg = xcfg_builder.build();
 }
 
 void Context::print_x86_cfg()

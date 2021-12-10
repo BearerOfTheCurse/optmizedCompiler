@@ -486,12 +486,10 @@ void InsGenerator::visit_compare(struct Node *ast, Operand *label, bool isRevers
   // deal with myTable->vrIdxMax
   myTable->vrIdxMax = max(myTable->vrIdxMax, insVRIdx);
 
-  //insVRIdx = myTable->vrIdx;
 }
 
 void InsGenerator::visit_write(struct Node *ast)
 {
-  //insVRIdx = myTable->vrIdx;
   recur_on_children(ast); // default behavior
 
   struct Node *childNode = node_get_kid(ast, 0);
@@ -521,14 +519,11 @@ void InsGenerator::visit_write(struct Node *ast)
   // deal with myTable->vrIdxMax
   myTable->vrIdxMax = max(myTable->vrIdxMax, insVRIdx);
 
-  //insVRIdx = myTable->vrIdx;
 }
 
 void InsGenerator::visit_read(struct Node *ast)
 {
 
-  //cout<<"Debug: insVRIdx: "<<insVRIdx<<endl;
-  //insVRIdx = myTable->vrIdx;
 
   recur_on_children(ast);
   struct Node *childNode = node_get_kid(ast, 0);
@@ -565,7 +560,6 @@ void InsGenerator::visit_read(struct Node *ast)
   //Edit
   insVRIdx++;
 
-  //insVRIdx = myTable->vrIdx;
 }
 
 Type *InsGenerator::visit_var_ref(struct Node *ast)

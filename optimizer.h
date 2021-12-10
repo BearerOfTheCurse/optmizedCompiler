@@ -45,9 +45,6 @@ struct VNKey {
 };
 
 class ValueNumbering :public Optimizer{
-    // order
-    // memory
-    // peehole
 
     private:
     unordered_map<int,int> constToVn ;
@@ -59,8 +56,6 @@ class ValueNumbering :public Optimizer{
     int nextVN;
     int memOffset;
 
-    //ControlFlowGraph* src;
-    //visitCfg(ControlFlowGraph* src);
     void visitBlock(BasicBlock* curBlock);
     void visitIns(Instruction* curIns);
 
@@ -69,14 +64,10 @@ class ValueNumbering :public Optimizer{
     void handleMemory(Instruction* curIns);
     void handleRead(Instruction* curIns);
 
-    //BasicBlock* findBlock(ControlFlowGraph* cfg,unsigned int bbIdx);
 
 
     public:
-    //ControlFlowGraph* dst;
-    //ValueNumbering();
     ValueNumbering(ControlFlowGraph* input);
-    //void optimize();
 
 }; 
 

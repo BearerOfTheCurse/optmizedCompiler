@@ -27,12 +27,6 @@ VNKey::VNKey(int input1,int input2,int input3){
 // Optimizer Implementation
 ////////////////////////////////////////////////////////////////////////
 
-// Optimizer::Optimizer(ControlFlowGraph* input)
-// {
-//   this->src = input;
-//   dst = new ControlFlowGraph();
-// }
-
 Optimizer::Optimizer(){
   src = nullptr;
   dst = new ControlFlowGraph();
@@ -43,7 +37,6 @@ Optimizer::Optimizer(){
 
 BasicBlock* Optimizer::findBlock(ControlFlowGraph* cfg,unsigned int bbIdx){
   for (auto i =cfg->bb_begin(); i != cfg->bb_end(); i++) {
-      //cout<<"Debug: "<<(*i)->get_id()<<endl;
       if( (*i)->get_id() == bbIdx) return (*i);
   }
   cerr<<"Error: Cannot find the block with idx: "<<bbIdx<<endl;
@@ -76,7 +69,6 @@ void Optimizer::visitCfg(ControlFlowGraph* input,ControlFlowGraph* output){
      }
 
     if (bb_kind == BASICBLOCK_INTERIOR) {
-        //cout<<"Debug: visitCfg "<<endl;
         this->visitBlock(bb);
     }
   }
@@ -98,7 +90,6 @@ void Optimizer::visitCfg(ControlFlowGraph* input,ControlFlowGraph* output){
     }
   }
 
-  //outSeq = lowCfg->create_instruction_sequence();
 }
 
 void Optimizer::visitBlock(BasicBlock* inputBlock){
@@ -142,38 +133,6 @@ void ValueNumbering::visitBlock(BasicBlock* curBlock){
         ins = curBlock->get_instruction(i);
         visitIns(ins);
     }
-    /*
-//Debug
-
-    if(curBlock->get_id() == 9){
-      unordered_map<int,int>::iterator ite; 
-      unordered_map<VNKey*,int>::iterator it = keyToVn.begin();
-      cout<<"Debug: vrToVn: "<<endl;
-
-    ite = vrToVn.begin();
-    while(ite != vrToVn.end()){
-      cout<<ite->first<<" : "<<ite->second<<endl;
-      ite++;
-    }
-
-    cout<<"Debug: vnToVr: "<<endl;
-    ite = vnToVr.begin();
-    while(ite != vnToVr.end()){
-      cout<<ite->first<<" : "<<ite->second<<endl;
-      ite++;
-    }
-
-    cout<<"Debug: record: "<<endl;
-    it = keyToVn.begin();
-
-    while(it != keyToVn.end()){
-      cout<<"{"<<it->first->vn1 <<"," << it->first->vn2 <<"}: "<<it->second<<endl;
-      it++;
-    }
-
-    }
-//Debug end
-*/
 }
 
 void ValueNumbering::handleRead(Instruction* curIns){    
@@ -221,25 +180,6 @@ void ValueNumbering::handleMemory(Instruction* curIns){
 }
 
 void ValueNumbering::handleMov(Instruction* curIns){    
-  /*
-    cout<<"Debug:  handleMov"<<endl;
-    unordered_map<int,int>::iterator ite; 
-    cout<<"Debug: vrToVn: "<<endl;
-
-    ite = vrToVn.begin();
-    while(ite != vrToVn.end()){
-      cout<<ite->first<<" : "<<ite->second<<endl;
-      ite++;
-    }
-
-    cout<<"Debug: vnToVr: "<<endl;
-    ite = vnToVr.begin();
-    while(ite != vnToVr.end()){
-      cout<<ite->first<<" : "<<ite->second<<endl;
-      ite++;
-    }
-    */
-
 
     Operand tmp;
     int curVn;
@@ -258,8 +198,6 @@ void ValueNumbering::handleMov(Instruction* curIns){
 
     if(tmp.get_kind() == OPERAND_INT_LITERAL){
       // if the case is vr1 = 3; remove the original record of vr1 and assign new vn for vr1;
-        //  curVn = nextVN;
-        //  nextVN++;
 
       if(constToVn.count(srcVr)){
          curVn = constToVn[srcVr];
@@ -305,24 +243,6 @@ void ValueNumbering::handleMov(Instruction* curIns){
 }
 
 void ValueNumbering::handleExp(Instruction* curIns){
-  /*
-    cout<<"Debug:  handleExp"<<endl;
-    unordered_map<int,int>::iterator ite; 
-    cout<<"Debug: vrToVn: "<<endl;
-
-    ite = vrToVn.begin();
-    while(ite != vrToVn.end()){
-      cout<<ite->first<<" : "<<ite->second<<endl;
-      ite++;
-    }
-
-    cout<<"Debug: vnToVr: "<<endl;
-    ite = vnToVr.begin();
-    while(ite != vnToVr.end()){
-      cout<<ite->first<<" : "<<ite->second<<endl;
-      ite++;
-    }
-    */
 
   int operandVr1, operandVr2, resVr;
   int operandVn1, operandVn2, resVn;
@@ -330,8 +250,6 @@ void ValueNumbering::handleExp(Instruction* curIns){
   resVn = -1;
 
   resVr = curIns->get_operand(0).get_base_reg();
-  // operandVr1 = curIns->get_operand(1).get_base_reg();
-  // operandVr2 = curIns->get_operand(2).get_base_reg();
 
 
 
@@ -362,7 +280,6 @@ void ValueNumbering::handleExp(Instruction* curIns){
 
   if(curIns->get_operand(2).get_kind() == OPERAND_VREG){
     operandVr2 = curIns->get_operand(2).get_base_reg();
-    // operandVn2 = vrToVn[operandVr2];
     if(vrToVn.count(operandVr2)){
       operandVn2 = vrToVn[operandVr2];
     }else{
@@ -383,7 +300,6 @@ void ValueNumbering::handleExp(Instruction* curIns){
     }
   }
 
-  //operandVn2 = vrToVn[operandVr2];
 
   // if the calculation is existed
   unordered_map<VNKey*,int>::iterator it = keyToVn.begin();
@@ -396,39 +312,6 @@ void ValueNumbering::handleExp(Instruction* curIns){
     }
     it++;
   }
-/*
-//Debug
-  if(resVr == 16){
-    cout<<"Debug: OperandVr1: "<<operandVr1<<" OperandVr2:"<<operandVr2<<endl;
-    cout<<"Debug: OperandVn1: "<<operandVn1<<" OperandVn2:"<<operandVn2<<endl;
-    cout<<"Debug: resVn: "<<resVn<<endl;
-    unordered_map<int,int>::iterator ite; 
-    cout<<"Debug: vrToVn: "<<endl;
-
-    ite = vrToVn.begin();
-    while(ite != vrToVn.end()){
-      cout<<ite->first<<" : "<<ite->second<<endl;
-      ite++;
-    }
-
-    cout<<"Debug: vnToVr: "<<endl;
-    ite = vnToVr.begin();
-    while(ite != vnToVr.end()){
-      cout<<ite->first<<" : "<<ite->second<<endl;
-      ite++;
-    }
-
-    cout<<"Debug: record: "<<endl;
-    it = keyToVn.begin();
-
-  while(it != keyToVn.end()){
-    cout<<"{"<<it->first->vn1 <<"," << it->first->vn2 <<"}: "<<it->second<<endl;
-    it++;
-  }
-
-  }
-//Debug End
-*/
 
   // if the calculation is not existed
   if(resVn == -1){
@@ -496,7 +379,6 @@ void ValueNumbering::visitIns(Instruction* curIns){
       break;
   //memory 
   case HINS_LOCALADDR: 
-      //handleRead(curIns);
       handleMemory(curIns);
       break;
   //read
@@ -509,23 +391,6 @@ void ValueNumbering::visitIns(Instruction* curIns){
   default:
     assert(false);
   }
-  // if(curIns->get_opcode() == HINS_MOV ||
-  //   curIns->get_opcode() == HINS_LOAD_ICONST){
-  //   handleMov(curIns);
-
-  // }else if (curIns->get_opcode() == HINS_INT_ADD ||
-  //           curIns->get_opcode() == HINS_INT_SUB ||
-  //           curIns->get_opcode() == HINS_INT_MUL ||
-  //           curIns->get_opcode() == HINS_INT_DIV ||
-  //           curIns->get_opcode() == HINS_INT_MOD ||
-  //           curIns->get_opcode() == HINS_INT_NEGATE
-  //           ){
-
-  //     handleExp(curIns);
-
-  // }else{
-  //   curBlock->add_instruction(curIns);
-  // }
 
 }
 
@@ -704,8 +569,6 @@ bool Peephole::ldiMovRule(BasicBlock* inputBlock, int i){
         && ins0->get_operand(0).has_base_reg() 
         && ins1->get_operand(1).has_base_reg() 
         && ins0->get_operand(0).get_base_reg() == ins1->get_operand(1).get_base_reg()){
-          // cout<< "Debug: ldi: "<<ins0->get_operand(0).get_base_reg()<<","<< ins0->get_operand(1).get_base_reg()<<endl;
-          // cout<< "Debug: mov: "<<ins1->get_operand(0).get_base_reg()<<","<< ins1->get_operand(1).get_base_reg()<<endl;
           vrToVr[ins1->get_operand(1).get_base_reg()] = ins1->get_operand(0).get_base_reg();
 
           Instruction* ins = new Instruction(HINS_LOAD_INT, ins1->get_operand(0),ins0->get_operand(1));
@@ -722,7 +585,6 @@ bool Peephole::ldiMovRule(BasicBlock* inputBlock, int i){
 void Peephole::visitBlock(BasicBlock* inputBlock){
     // begin going through
     int sz = inputBlock->get_length();
-    //bool canDelete = 0;
 
     Instruction *curIns;
     for (int i = 0; i < sz; i++)
@@ -757,7 +619,6 @@ void Cleaner::visitBlock(BasicBlock* inputBlock){
     int sz = inputBlock->get_length();
     Instruction *ins;
     bitset<256> liveVr;
-    //bool canDelete = 0;
 
     for (int i = 0; i < sz; i++)
     {

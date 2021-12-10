@@ -16,7 +16,6 @@ class Mcg
 
 private:
   SymbolTable *myTable;
-  //InstructionSequence *inSeq;
   ControlFlowGraph *highCfg;
 
   unordered_map<int,int> vrToMr;  //find which mr store the value of vr
@@ -84,7 +83,6 @@ private:
   void oneStatement(Instruction *ins);
 
 //new functions for reg alloc
-  //Operand* getMr(int vrIdx);
   void updateLiveTime(BasicBlock* curBlock);
   void visitBlock(BasicBlock* curBlock);
   Operand* getMrUse(int vrIdx);   //return a mr that contains value to use;
