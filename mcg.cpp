@@ -432,11 +432,17 @@ void Mcg::sub(Instruction *ins)
     Operand des = *(getOperand(opIdx,0));
     //cout<<"Debug: sub"<<endl;
 // 
+/*
     Instruction *first = new Instruction(MINS_MOVQ, des, rax);
     first->set_comment("sub");
 
     curBlock->add_instruction(first);
     curBlock->add_instruction(new Instruction(MINS_MOVQ, leftOp, des));
+    curBlock->add_instruction(new Instruction(MINS_SUBQ, rightOp, des));
+    */
+    Instruction *first = new Instruction(MINS_MOVQ, leftOp, des);
+    first->set_comment("sub");
+    curBlock->add_instruction(first);
     curBlock->add_instruction(new Instruction(MINS_SUBQ, rightOp, des));
 
     // outSeq->add_instruction(first);
@@ -490,8 +496,12 @@ void Mcg::mul(Instruction *ins)
     Operand des = *(getOperand(opIdx,0));
 
     
+    Instruction *first = new Instruction(MINS_MOVQ, leftOp, des);
+    first->set_comment("mul");
+    curBlock->add_instruction(first);
+    curBlock->add_instruction(new Instruction(MINS_IMULQ, rightOp, des));
 
-
+/*
     Instruction *first = new Instruction(MINS_MOVQ, des, rax);
     first->set_comment("mul");
 
@@ -502,6 +512,7 @@ void Mcg::mul(Instruction *ins)
     curBlock->add_instruction(first);
     curBlock->add_instruction(new Instruction(MINS_MOVQ, leftOp, des));
     curBlock->add_instruction(new Instruction(MINS_IMULQ, rightOp, des));
+    */
     //outSeq->add_instruction(new Instruction(MINS_MOVQ, rax, des));
 }
 void Mcg::div(Instruction *ins)
@@ -745,12 +756,17 @@ void Mcg::storeInt(Instruction *ins)
     // outSeq->add_instruction(first);
     // outSeq->add_instruction(new Instruction(MINS_MOVQ, localvar1, r10));
     // outSeq->add_instruction(new Instruction(MINS_MOVQ, r10, localvar2));
-
+/*
      Instruction *first = new Instruction(MINS_MOVQ, left, rdi);
      first->set_comment("sti");
 
      curBlock->add_instruction(first);
      curBlock->add_instruction(new Instruction(MINS_MOVQ, right, rsi));
+     */
+     Instruction *first = new Instruction(MINS_MOVQ, right, rsi);
+     first->set_comment("sti");
+
+     curBlock->add_instruction(first);
      //outSeq->add_instruction(new Instruction(MINS_MOVQ, r10, localvar2));
 
     Operand tmp(OPERAND_MREG_MEMREF,left.get_base_reg());
@@ -946,6 +962,7 @@ void Mcg::mov(Instruction *ins)
        //src= *(getMrUse(opIdx));
        src = *(getOperand(opIdx,1));
     }
+    
 
     // int dOffset = ins->get_operand(0).get_base_reg() * 8 + myTable->structSize;
     // Operand des(OPERAND_MREG_MEMREF_OFFSET, MREG_RSP, dOffset);
@@ -954,13 +971,27 @@ void Mcg::mov(Instruction *ins)
     // Operand des= *(getMrStore(opIdx));
     Operand des= *(getOperand(opIdx,0));
 
-    Instruction *first = new Instruction(MINS_MOVQ, src, rdi);
-    first->set_comment("mov");
+    if(opIdx < myTable->vrIdx 
+        && ins->get_operand(1).has_base_reg() 
+        && ins->get_operand(1).get_base_reg() < myTable->vrIdx){
+
+        Instruction *first = new Instruction(MINS_MOVQ, src, rdi);
+        first->set_comment("mov");
 
     // outSeq->add_instruction(first);
-    curBlock->add_instruction(first);
+        curBlock->add_instruction(first);
    // outSeq->add_instruction(new Instruction(MINS_MOVQ, r10, des));
-    curBlock->add_instruction(new Instruction(MINS_MOVQ, rdi, des));
+        curBlock->add_instruction(new Instruction(MINS_MOVQ, rdi, des));
+
+        }else{
+
+        Instruction *first = new Instruction(MINS_MOVQ, src, des);
+        first->set_comment("mov");
+        curBlock->add_instruction(first);
+
+        }
+
+
 }
 
 void Mcg::printCode()

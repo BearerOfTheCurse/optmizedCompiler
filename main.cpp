@@ -116,14 +116,14 @@ int main(int argc, char **argv) {
     }
 
     if(mode == PRINT_GOODCODE){
-      // context_build_good_code(ctx);
-      // context_print_good_code(ctx);
-      context_build_code(ctx);
-      context_print_code(ctx);
+      context_build_good_code(ctx);
+      context_print_good_code(ctx);
+      // context_build_code(ctx);
+      // context_print_code(ctx);
 
     }else{
-      context_build_good_code(ctx);
-//      context_build_code(ctx);
+      // context_build_good_code(ctx);
+     context_build_code(ctx);
     }
 
 
@@ -138,8 +138,8 @@ int main(int argc, char **argv) {
     }
 
     if (argc == 2){
- //     context_print_code(ctx);
-      context_print_good_code(ctx);
+     context_print_code(ctx);
+      // context_print_good_code(ctx);
     }
 
 

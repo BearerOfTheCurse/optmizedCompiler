@@ -157,14 +157,16 @@ void Context::build_good_code()
    valueNum->optimize();
     cfg = valueNum->dst;
 
-   vprop->resetCfg(cfg);
-   vprop->optimize();
-    cfg = vprop->dst;
+  vprop->resetCfg(cfg);
+  vprop->optimize();
+  cfg = vprop->dst;
+
 
    cleaner->resetCfg(cfg);
    cleaner->optimize();
-    cfg = cleaner->dst;
+  cfg = cleaner->dst;
   }
+
 /*
   cprop = new ConstProp(cfg);
   cprop->optimize();

@@ -1,5 +1,10 @@
  need to do:
 
+  how to assgin callee register to global variable
+  detail of report: what should I write except the effect on code and benchmark, order?
+
+  why implement. previous ineffeciency, change, become more effective
+
   memory access in LVN
   LVN not significant improve (maybe no exchange?)
   how many loops for optimize
